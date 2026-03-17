@@ -1,1 +1,46 @@
-/tmp/dxc-prepaid-demo/base_processes.json
+[
+    {
+        "id": "DXC_PREPAID_001",
+        "name": "Accruals - Q1 2026 SAP Report",
+        "category": "Prepaid - Data Ingestion & Invoice Extraction",
+        "stockId": "SAP-Q1-2026",
+        "year": "2026-03-17",
+        "status": "Ready",
+        "currentStatus": "Ready for processing",
+        "vendor": "SAP S/4HANA",
+        "entity": "DXC Technology"
+    },
+    {
+        "id": "DXC_PREPAID_002",
+        "name": "Insurance Premium - Marsh McLennan",
+        "category": "Prepaid - Data Ingestion & Invoice Extraction",
+        "stockId": "INS-2026-MM",
+        "year": "2026-03-17",
+        "status": "Ready",
+        "currentStatus": "Ready for processing",
+        "vendor": "Marsh McLennan",
+        "entity": "DXC Technology"
+    },
+    {
+        "id": "DXC_EXPENSE_001",
+        "name": "Software License Amortization - Q1",
+        "category": "Prepaid - Expense Booking",
+        "stockId": "SLA-Q1-2026",
+        "year": "2026-03-17",
+        "status": "Ready",
+        "currentStatus": "Ready for processing",
+        "vendor": "Microsoft EA",
+        "entity": "DXC Technology"
+    },
+    {
+        "id": "DXC_EXPENSE_002",
+        "name": "Maintenance Contract - HPE",
+        "category": "Prepaid - Expense Booking",
+        "stockId": "MTC-HPE-2026",
+        "year": "2026-03-17",
+        "status": "Ready",
+        "currentStatus": "Ready for processing",
+        "vendor": "Hewlett Packard Enterprise",
+        "entity": "DXC Technology"
+    }
+]

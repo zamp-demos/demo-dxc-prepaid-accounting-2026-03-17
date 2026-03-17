@@ -1,0 +1,1 @@
+/tmp/dxc-prepaid-demo/simulation_scripts/prepaid_ingestion_001.cjs

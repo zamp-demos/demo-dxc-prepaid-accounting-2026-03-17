@@ -67,11 +67,26 @@ const ProcessList = ({ category = 'Data Integrity Review' }) => {
         );
     };
 
-    const columns = [
-        { label: 'Study ID', key: 'stockId' },
-        { label: 'Document Type', key: 'documentType' },
-        { label: 'Data Points', key: 'dataPoints' },
-        { label: 'Risk Level', key: 'riskLevel' }
+    const COLUMN_CONFIG = {
+        'Prepaid - Data Ingestion & Invoice Extraction': [
+            { label: 'Invoice ID', key: 'stockId' },
+            { label: 'Vendor', key: 'vendor' },
+            { label: 'Entity', key: 'entity' },
+            { label: 'Date', key: 'year' },
+        ],
+        'Prepaid - Expense Booking': [
+            { label: 'Reference', key: 'stockId' },
+            { label: 'Vendor', key: 'vendor' },
+            { label: 'Monthly Amortization', key: 'monthly_amount', render: (v) => v != null ? `$${Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—' },
+            { label: 'Entity', key: 'entity' },
+        ],
+    };
+
+    const columns = COLUMN_CONFIG[category] || [
+        { label: 'Reference', key: 'stockId' },
+        { label: 'Vendor', key: 'vendor' },
+        { label: 'Entity', key: 'entity' },
+        { label: 'Date', key: 'year' },
     ];
 
     return (
@@ -161,7 +176,7 @@ const ProcessList = ({ category = 'Data Integrity Review' }) => {
 
                                     {columns.map(col => (
                                         <td key={col.key} className="px-4 py-2.5 whitespace-nowrap text-left text-[13px] font-[450] text-[#171717]">
-                                            {process[col.key] || '—'}
+                                            {col.render ? col.render(process[col.key]) : (process[col.key] || '—')}
                                         </td>
                                     ))}
                                 </tr>

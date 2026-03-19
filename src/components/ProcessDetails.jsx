@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { FileText, Video, Database, ChevronUp, ChevronDown, Check, Maximize2, Loader2, Star, MonitorPlay, Image as ImageIcon, Table as TableIcon, Send, X, Trash2, ArrowLeft, MoreHorizontal, Minimize2, Bold, Italic, Underline, AlignLeft, List, Link, Asterisk, Presentation, ArrowUp, ArrowDown, Activity, ExternalLink, Search, Minus, Plus as PlusIcon, RotateCw, Download, Printer, Pin, Menu, Filter, Sliders, Layout, LayoutGrid } from 'lucide-react';
+import { FileText, Video, Database, ChevronUp, ChevronDown, Check, Maximize2, Loader2, Star, MonitorPlay, Image as ImageIcon, Table as TableIcon, Send, X, Trash2, ArrowLeft, MoreHorizontal, Minimize2, Bold, Italic, Underline, AlignLeft, List, Link, Asterisk, Presentation, ArrowUp, ArrowDown, Activity, ExternalLink, Search, Minus, Plus as PlusIcon, RotateCw, Download, Printer, Pin, Menu, Filter, Sliders, Layout, LayoutGrid, Plug2 } from 'lucide-react';
 
 
 const VideoViewer = ({ artifact, onClose }) => {
@@ -1067,6 +1067,8 @@ const ProcessDetails = () => {
                 />
             );
             case 'link': return ExternalLink;
+            case 'connector': return Plug2;
+            case 'integration': return Plug2;
             default: return Database;
         }
     };

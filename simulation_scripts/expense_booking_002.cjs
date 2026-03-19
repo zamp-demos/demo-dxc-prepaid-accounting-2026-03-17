@@ -46,34 +46,89 @@ const updateProcessListStatus = async (processId, status, currentStatus) => {
 (async () => {
     console.log(`Starting ${PROCESS_ID}: ${CASE_NAME}...`);
     writeJson(path.join(PUBLIC_DATA_DIR, `process_${PROCESS_ID}.json`), {
-        logs: [], keyDetails: { "Vendor": "HPE", "Contract": "HPE-MTC-2025-DXC", "Monthly": "$87,500", "GL Account": "7420000" }
+        logs: [], keyDetails: {
+            "Vendor": "Hewlett Packard Enterprise",
+            "Contract": "HPE-MTC-2026-022",
+            "Monthly Amortization": "$41,666.67",
+            "GL Code": "110094",
+            "Prepaid Account": "Prepaid - ITSM Software"
+        }
     });
 
     const steps = [
         {
             id: "step-1",
             title_p: "Retrieving HPE maintenance contract from prepaid schedule...",
-            title_s: "HPE contract retrieved - 3-year maintenance agreement, Year 1 of 3",
-            reasoning: ["Contract HPE-MTC-2025-DXC: ProLiant server maintenance", "Contract period: April 2025 - March 2028 (36 months)", "Total contract value: $3,150,000", "Q1 2026 is Month 9 of 36"]
+            title_s: "HPE contract retrieved — 3-year maintenance agreement, Year 1 of 3",
+            reasoning: [
+                "Contract HPE-MTC-2026-022: HPE Pointnext Datacenter Support & Maintenance",
+                "Contract period: April 2026 – March 2029 (36 months)",
+                "Total contract value: $1,500,000",
+                "Monthly straight-line amortization: $41,666.67"
+            ]
         },
         {
             id: "step-2",
-            title_p: "Calculating monthly expense booking amount...",
-            title_s: "Expense amount confirmed - $87,500/month straight-line",
-            reasoning: ["Monthly amount: $3,150,000 / 36 months = $87,500", "Q1 2026 total: $87,500 x 3 months = $262,500", "Remaining prepaid balance after Q1: $2,537,500", "Cost center: IT Infrastructure (CC-8801)"]
+            title_p: "Reading PO line item details and business justification for GL mapping...",
+            title_s: "GL code 110094 identified — Prepaid - ITSM Software",
+            reasoning: [
+                "PO Line Item Name: 'HPE Pointnext — Datacenter Support & Maintenance Services'",
+                "PO Line Description: Annual datacenter hardware maintenance and support subscription covering HPE ProLiant servers, storage arrays, and networking equipment at DXC co-location sites; PO HPE-MTC-2026-022",
+                "Business Justification: Hardware maintenance contract billed annually in Q1; support services consumed evenly across 12-month term; prepaid recognition applied per DXC policy > $25K threshold",
+                "Expense category matched: hardware support & managed services → GL cluster 110094",
+                "GL 110094 description: Prepaid expenses — IT service management and operations platform subscriptions",
+                "(G) GL code 110094 (Prepaid - ITSM Software) confirmed — straight-line amortization applies"
+            ]
         },
         {
             id: "step-3",
-            title_p: "Creating SAP journal entry for Q1 maintenance expense...",
-            title_s: "Journal entry created and validated - ready for posting",
-            reasoning: ["Dr. Maintenance Expense GL 7420000: $262,500", "Cr. Prepaid Maintenance GL 1725000: $262,500", "Cost center CC-8801 (IT Infrastructure)", "Journal entry validated against budget: within approved limit"]
+            title_p: "Calculating monthly expense booking amount...",
+            title_s: "Expense amount confirmed — $41,666.67/month straight-line",
+            reasoning: [
+                "Monthly amount: $1,500,000 ÷ 36 months = $41,666.67",
+                "Q1 2026 total (Jan–Mar): $125,000.01",
+                "Remaining prepaid balance after Q1: $1,374,999.99 (33 months)",
+                "Cost center: IT Infrastructure (CC-8801)"
+            ]
         },
         {
             id: "step-4",
+            title_p: "Preparing journal entry — GL 110094 credit, maintenance expense debit...",
+            title_s: "Journal entry created and validated — ready for posting",
+            reasoning: [
+                "Dr. Maintenance & Support Expense GL 7420000: $41,666.67",
+                "Cr. Prepaid Maintenance GL 110094: $41,666.67",
+                "Cost center CC-8801 (IT Infrastructure)",
+                "Journal entry reference: JE-2026-HPE-MTC-001",
+                "Validated against budget: within approved IT ops envelope"
+            ]
+        },
+        {
+            id: "step-5",
             title_p: "Posting to SAP and updating prepaid schedule balance...",
-            title_s: "Q1 expense booked - SAP document 1900045834, balance updated",
-            reasoning: ["SAP document 1900045834 posted successfully", "Posting date: March 31, 2026", "Prepaid balance updated: $2,537,500 remaining (29 months)", "Next booking: April 30, 2026 - $87,500"],
-            artifacts: [{ id: "art-1", type: "json", label: "Booking Summary", data: { sap_doc: "1900045834", vendor: "HPE", q1_expense: "$262,500", monthly_rate: "$87,500", remaining_balance: "$2,537,500", months_remaining: 29 } }]
+            title_s: "Expense booked — SAP document 1900045834, GL 110094 balance updated",
+            reasoning: [
+                "SAP document 1900045834 posted successfully",
+                "Posting date: March 31, 2026",
+                "GL 110094 (Prepaid - ITSM Software) balance reduced by $41,666.67",
+                "Remaining prepaid balance: $1,374,999.99 (33 months remaining)",
+                "(G) Next booking scheduled: April 30, 2026 — $41,666.67"
+            ],
+            artifacts: [{
+                id: "art-gl-mapping",
+                type: "json",
+                label: "GL Mapping Summary",
+                data: {
+                    gl_code: "110094",
+                    gl_account_name: "Prepaid - ITSM Software",
+                    po_line_name: "HPE Pointnext — Datacenter Support & Maintenance Services",
+                    business_justification: "Hardware maintenance billed annually; benefit accrues evenly over 36-month contract",
+                    monthly_amortization: "$41,666.67",
+                    sap_document: "1900045834",
+                    posting_date: "2026-03-31",
+                    status: "POSTED"
+                }
+            }]
         }
     ];
 

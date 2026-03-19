@@ -78,6 +78,8 @@ const ProcessList = ({ category = 'Data Integrity Review' }) => {
             { label: 'Reference', key: 'stockId' },
             { label: 'Vendor', key: 'vendor' },
             { label: 'Monthly Amortization', key: 'monthly_amount', render: (v) => v != null ? `$${Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : '—' },
+            { label: 'GL Code', key: 'gl_code' },
+            { label: 'Prepaid Account', key: 'prepaid_label', render: (v) => v ? <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-blue-50 text-blue-700 border border-blue-100">{v}</span> : '—' },
             { label: 'Entity', key: 'entity' },
         ],
     };

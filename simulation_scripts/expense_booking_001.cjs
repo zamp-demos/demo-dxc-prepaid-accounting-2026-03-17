@@ -46,34 +46,90 @@ const updateProcessListStatus = async (processId, status, currentStatus) => {
 (async () => {
     console.log(`Starting ${PROCESS_ID}: ${CASE_NAME}...`);
     writeJson(path.join(PUBLIC_DATA_DIR, `process_${PROCESS_ID}.json`), {
-        logs: [], keyDetails: { "Vendor": "Microsoft EA", "Contract": "EA-DXC-2024-001", "Q1 Expense": "$312,500", "GL Account": "7410000" }
+        logs: [], keyDetails: {
+            "Vendor": "Microsoft EA",
+            "Contract": "EA-DXC-2026-001",
+            "Monthly Amortization": "$729,166.67",
+            "GL Code": "110092",
+            "Prepaid Account": "Prepaid - CRM Software"
+        }
     });
 
     const steps = [
         {
             id: "step-1",
             title_p: "Loading prepaid software license schedule from ingestion output...",
-            title_s: "Schedule loaded - 98 software license entries ready for Q1 booking",
-            reasoning: ["Loaded prepaid schedule from Data Ingestion workflow output", "98 software license entries with active balances", "Q1 2026 amortization period: Jan 1 - Mar 31, 2026", "Microsoft EA represents largest single entry: $312,500/quarter"]
+            title_s: "Schedule loaded — 98 software license entries ready for Q1 booking",
+            reasoning: [
+                "Loaded prepaid schedule from Data Ingestion workflow output",
+                "98 software license entries with active balances across 14 vendors",
+                "Q1 2026 amortization period: Jan 1 – Mar 31, 2026",
+                "Microsoft EA represents largest single entry: $729,166.67/month"
+            ]
         },
         {
             id: "step-2",
-            title_p: "Calculating Q1 amortization amounts per license category...",
-            title_s: "Amortization calculated - $2,187,500 total Q1 software expense",
-            reasoning: ["Microsoft EA (365, Azure, Dynamics): $312,500", "Oracle Database licenses: $187,500", "Salesforce CRM enterprise: $95,000", "Other software (46 vendors): $1,592,500", "Total Q1 software amortization: $2,187,500"]
+            title_p: "Reading PO line item details and business justification for GL mapping...",
+            title_s: "GL code 110092 identified — Prepaid - CRM Software",
+            reasoning: [
+                "PO Line Item Name: 'Microsoft EA — Azure + M365 Software Licenses'",
+                "PO Line Description: Annual enterprise agreement covering Azure committed spend and Microsoft 365 E5 licenses for DXC global workforce; SKU MS-EA-2026-DXC",
+                "Business Justification: Enterprise cloud and productivity software billed annually upfront; benefit received evenly across 12-month contract period Apr 2026 – Mar 2027",
+                "Expense category matched: cloud platform + productivity SaaS → GL cluster 110092",
+                "GL 110092 description: Prepaid expenses — CRM, sales automation, and business intelligence software licenses",
+                "(G) GL code 110092 (Prepaid - CRM Software) confirmed — straight-line amortization applies"
+            ]
         },
         {
             id: "step-3",
-            title_p: "Preparing journal entry with cost center allocations...",
-            title_s: "Journal entry prepared - 312 debit lines across 28 cost centers",
-            reasoning: ["Debit: IT Expense GL 7410000 across 28 cost centers", "Credit: Prepaid Software GL 1724000 - single offset entry", "Cost center allocation based on employee headcount per center", "Journal entry reference: JE-2026-Q1-SW-001"]
+            title_p: "Calculating monthly amortization amounts per license category...",
+            title_s: "Amortization calculated — $729,166.67/month for Microsoft EA",
+            reasoning: [
+                "Contract total value: $8,750,000 (12-month EA)",
+                "Monthly amortization: $8,750,000 ÷ 12 = $729,166.67",
+                "Q1 2026 total (Jan–Mar): $2,187,500.00",
+                "Prepaid balance remaining after Q1: $6,562,500.00 (9 months)",
+                "All amounts validated against PO EA-DXC-2026-001"
+            ]
         },
         {
             id: "step-4",
+            title_p: "Preparing journal entry with GL 110092 debit and cost center allocations...",
+            title_s: "Journal entry prepared — 28 cost centers, GL 110092 → GL 7410000",
+            reasoning: [
+                "Dr. IT & Software Expense GL 7410000 across 28 cost centers: $729,166.67",
+                "Cr. Prepaid Software GL 110092: $729,166.67",
+                "Cost center allocation based on licensed user headcount per center",
+                "Journal entry reference: JE-2026-Q1-MS-EA-001",
+                "Validated against approved budget: within Q1 software expense envelope"
+            ]
+        },
+        {
+            id: "step-5",
             title_p: "Posting journal entry to SAP and generating confirmation...",
-            title_s: "Journal entry posted successfully - SAP document 1900045821",
-            reasoning: ["Posted to SAP S/4HANA company code 1000", "SAP document number: 1900045821", "Posting date: March 31, 2026", "All 312 line items posted without errors", "Prepaid balance reduced by $2,187,500"],
-            artifacts: [{ id: "art-1", type: "json", label: "Journal Entry Summary", data: { sap_doc: "1900045821", posting_date: "2026-03-31", total_expense: "$2,187,500", cost_centers: 28, line_items: 312, status: "POSTED" } }]
+            title_s: "Journal entry posted — SAP document 1900045821, GL 110092 balance updated",
+            reasoning: [
+                "Posted to SAP S/4HANA company code 1000",
+                "SAP document number: 1900045821",
+                "Posting date: March 31, 2026",
+                "GL 110092 (Prepaid - CRM Software) balance reduced by $729,166.67",
+                "(G) All 28 line items posted without errors"
+            ],
+            artifacts: [{
+                id: "art-gl-mapping",
+                type: "json",
+                label: "GL Mapping Summary",
+                data: {
+                    gl_code: "110092",
+                    gl_account_name: "Prepaid - CRM Software",
+                    po_line_name: "Microsoft EA — Azure + M365 Software Licenses",
+                    business_justification: "Annual upfront SaaS; benefit accrues evenly over 12 months",
+                    monthly_amortization: "$729,166.67",
+                    sap_document: "1900045821",
+                    posting_date: "2026-03-31",
+                    status: "POSTED"
+                }
+            }]
         }
     ];
 

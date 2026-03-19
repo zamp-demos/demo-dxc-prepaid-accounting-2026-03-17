@@ -187,13 +187,61 @@ const server = http.createServer(async (req, res) => {
         req.on('data', chunk => body += chunk);
         req.on('end', () => {
             try {
-                const { signalId } = JSON.parse(body);
+                const parsed = JSON.parse(body);
+                // Support both { signalId } (legacy) and { signal } (frontend usage)
+                const signalId = parsed.signalId || parsed.signal;
                 const signalFile = path.join(__dirname, 'interaction-signals.json');
                 let signals = {};
                 try { signals = JSON.parse(fs.readFileSync(signalFile, 'utf8')); } catch(e) {}
-                signals[signalId] = true;
+                if (signalId) signals[signalId] = true;
                 fs.writeFileSync(signalFile, JSON.stringify(signals, null, 4));
-            } catch(e) {}
+
+                // GL HITL signals — transition DXC_EXPENSE_001 to Done and record decision
+                const glSignals = ['gl_confirm_110091', 'gl_confirm_110092', 'gl_confirm_split', 'gl_escalate_finance'];
+                if (signalId && glSignals.includes(signalId)) {
+                    const glLabels = {
+                        gl_confirm_110091: 'GL 110091 — Prepaid Enterprise Software Licenses',
+                        gl_confirm_110092: 'GL 110092 — Prepaid CRM & Business Intelligence Software',
+                        gl_confirm_split: 'Split: 70% GL 110091 / 30% GL 110093',
+                        gl_escalate_finance: 'Escalated to Finance Controller'
+                    };
+                    const newStatus = signalId === 'gl_escalate_finance' ? 'Needs Attention' : 'Done';
+                    const currentLabel = glLabels[signalId] || signalId;
+
+                    if (fs.existsSync(PROCESSES_PATH)) {
+                        const processes = JSON.parse(fs.readFileSync(PROCESSES_PATH, 'utf8'));
+                        const idx = processes.findIndex(p => p.id === 'DXC_EXPENSE_001');
+                        if (idx !== -1) {
+                            processes[idx].status = newStatus;
+                            processes[idx].currentStatus = `Human confirmed: ${currentLabel}`;
+                            fs.writeFileSync(PROCESSES_PATH, JSON.stringify(processes, null, 4));
+                        }
+                    }
+
+                    // Also update the process log detail file if it exists
+                    const logPath = path.join(DATA_DIR, 'process_DXC_EXPENSE_001.json');
+                    if (fs.existsSync(logPath)) {
+                        const logData = JSON.parse(fs.readFileSync(logPath, 'utf8'));
+                        const resolvedStep = {
+                            id: 'step-hitl-resolved',
+                            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                            title: `✓ GL mapping confirmed by Finance: ${currentLabel}`,
+                            status: newStatus === 'Done' ? 'completed' : 'warning',
+                            reasoning: [
+                                `Human decision received: ${signalId}`,
+                                `GL account confirmed: ${currentLabel}`,
+                                `Journal entry will proceed with confirmed GL mapping`,
+                                `Audit trail updated with human approval timestamp`
+                            ]
+                        };
+                        if (!logData.log) logData.log = [];
+                        logData.log.push(resolvedStep);
+                        logData.status = newStatus;
+                        fs.writeFileSync(logPath, JSON.stringify(logData, null, 4));
+                    }
+                    console.log(`[HITL Resolved] DXC_EXPENSE_001 signal: ${signalId} -> status: ${newStatus}`);
+                }
+            } catch(e) { console.error('[Signal handler error]', e); }
             res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ status: 'ok' }));
         });

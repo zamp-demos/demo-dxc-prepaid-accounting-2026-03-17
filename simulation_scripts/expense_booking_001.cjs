@@ -70,15 +70,37 @@ const updateProcessListStatus = async (processId, status, currentStatus) => {
         {
             id: "step-2",
             title_p: "Reading PO line item details and business justification for GL mapping...",
-            title_s: "GL code 110092 identified — Prepaid - CRM Software",
+            title_s: "GL mapping ambiguous — Pace needs your input to proceed",
+            status_override: "warning",
             reasoning: [
-                "PO Line Item Name: 'Microsoft EA — Azure + M365 Software Licenses'",
-                "PO Line Description: Annual enterprise agreement covering Azure committed spend and Microsoft 365 E5 licenses for DXC global workforce; SKU MS-EA-2026-DXC",
-                "Business Justification: Enterprise cloud and productivity software billed annually upfront; benefit received evenly across 12-month contract period Apr 2026 – Mar 2027",
-                "Expense category matched: cloud platform + productivity SaaS → GL cluster 110092",
-                "GL 110092 description: Prepaid expenses — CRM, sales automation, and business intelligence software licenses",
-                "(G) GL code 110092 (Prepaid - CRM Software) confirmed — straight-line amortization applies"
-            ]
+                "PO Line Item: 'Microsoft EA — Azure + M365 Software Licenses'",
+                "PO Description: Annual enterprise agreement covering Azure committed spend and Microsoft 365 E5 licenses for DXC global workforce; SKU MS-EA-2026-DXC",
+                "Business Justification: Enterprise cloud and productivity software billed annually upfront",
+                "Problem: 'Azure + M365' spans two GL clusters — cloud infrastructure (110091) AND productivity/CRM software (110092)",
+                "110091 — Prepaid Enterprise Software Licenses: covers SaaS platforms, ERP, collaboration tools",
+                "110092 — Prepaid CRM & Business Intelligence Software: covers sales, analytics, BI tooling",
+                "Microsoft 365 E5 includes both Teams/Exchange (productivity → 110091) and Power BI Premium (BI → 110092)",
+                "Azure committed spend is infrastructure, not software license — could also map to 110093 (Prepaid IT Infrastructure)",
+                "Confidence score: 54% — below the 80% threshold required for automated posting",
+                "Pace is pausing and escalating to human reviewer before proceeding"
+            ],
+            artifacts: [
+                {
+                    id: "dec-gl-mapping-001",
+                    type: "decision",
+                    label: "Review GL mapping",
+                    data: {
+                        question: "Pace cannot confidently determine the correct GL code for 'Microsoft EA — Azure + M365 Software Licenses'. The PO spans cloud infrastructure and productivity SaaS, which map to different GL clusters. Please select the correct account:",
+                        options: [
+                            { value: "opt-110091", label: "GL 110091 — Prepaid Enterprise Software Licenses (M365 E5 as primary, Azure as bundled SaaS)", signal: "gl_confirm_110091" },
+                            { value: "opt-110092", label: "GL 110092 — Prepaid CRM & Business Intelligence Software (Power BI Premium, analytics focus)", signal: "gl_confirm_110092" },
+                            { value: "opt-split", label: "Split across accounts — 70% GL 110091 (M365), 30% GL 110093 (Azure infrastructure)", signal: "gl_confirm_split" },
+                            { value: "opt-escalate", label: "Escalate to Finance Controller — hold this entry pending manual review", signal: "gl_escalate_finance" }
+                        ]
+                    }
+                }
+            ],
+            hitl: true
         },
         {
             id: "step-3",
@@ -139,6 +161,16 @@ const updateProcessListStatus = async (processId, status, currentStatus) => {
         updateProcessLog(PROCESS_ID, { id: step.id, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), title: step.title_p, status: "processing" });
         await updateProcessListStatus(PROCESS_ID, "In Progress", step.title_p);
         await delay(2500);
+
+        // HITL step — pause and surface decision to human before continuing
+        if (step.hitl) {
+            const finalStatus = step.status_override || "warning";
+            updateProcessLog(PROCESS_ID, { id: step.id, title: step.title_s, status: finalStatus, reasoning: step.reasoning || [], artifacts: step.artifacts || [] });
+            await updateProcessListStatus(PROCESS_ID, "Needs Attention", step.title_s);
+            console.log(`[HITL] Paused at step ${step.id} — waiting for human decision`);
+            break; // Stop simulation here; remaining steps run after signal received
+        }
+
         updateProcessLog(PROCESS_ID, { id: step.id, title: step.title_s, status: isFinal ? "completed" : "success", reasoning: step.reasoning || [], artifacts: step.artifacts || [] });
         await updateProcessListStatus(PROCESS_ID, isFinal ? "Done" : "In Progress", step.title_s);
         await delay(1500);
